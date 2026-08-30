@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="Targets\Build.Global.props" />
+  <Import Project="Targets\Build.TargetFramework.props" />
+</Project>

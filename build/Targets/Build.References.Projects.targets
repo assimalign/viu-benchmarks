@@ -1,0 +1,31 @@
+<Project>
+    <!--
+        Project Reference By Name Only.
+
+        Lets a project reference another by its assembly name instead of by relative csproj path.
+        Resolution walks this repository's code areas once, matches each item's Include to the
+        csproj whose filename matches, and emits a regular
+        <ProjectReference Include="<resolved-path>" />.
+
+        Usage (by assembly name only):
+          <ViuBenchmarkProjectReference Include="Assimalign.Viu.Testing.Benchmarks" />
+
+        Note that an unresolvable name is a SILENT no-op — the transform produces an empty string
+        and MSBuild drops it, so the build fails later with unresolved types rather than at
+        evaluation. Cross-repository references are deliberately not supported: the Viu framework
+        is consumed as packages (see Build.References.Packages.targets), never as a project
+        reference into a sibling working tree.
+    -->
+    <ItemGroup>
+        <!-- Index code projects ONCE: the benchmark suite and the budget-checker tests. -->
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\**\*.csproj" />
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)scripts\tests\**\*.csproj" />
+        <_ViuBenchmarkProject Update="@(_ViuBenchmarkProject)" ProjectId="%(_ViuBenchmarkProject.Filename)" ProjectPath="%(_ViuBenchmarkProject.Identity)" />
+
+        <ViuBenchmarkProjectReference Update="@(_ViuBenchmarkProject->'%(ProjectId)')" ProjectPath="%(_ViuBenchmarkProject.ProjectPath)" />
+        <ProjectReference Include="@(ViuBenchmarkProjectReference->'%(ProjectPath)')" />
+        <ViuBenchmarkProjectReference Remove="@(ViuBenchmarkProjectReference->HasMetadata('ProjectPath'))" />
+
+        <_ViuBenchmarkProject Remove="@(_ViuBenchmarkProject)" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,50 @@
+# The single point of CI environment setup for this repository: every workflow consumes this
+# composite instead of duplicating SDK/workload/cache steps. The repository checkout stays in each
+# workflow — a local composite action cannot run before the repository that contains it is
+# checked out.
+name: Set up .NET for the Viu benchmarks
+description: >-
+  .NET 10 SDK (pinned by global.json), NuGet caching, and optionally the wasm-tools workload for
+  the budget lanes that publish a browser-wasm payload.
+
+inputs:
+  install-wasm-tools:
+    description: >-
+      Install the wasm-tools workload. Needed only by the budget lanes, which publish the Viu
+      packaged-consumer fixture for the browser-wasm runtime identifier. The benchmark lanes are
+      pure CoreCLR and deliberately skip it.
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Set up .NET SDK
+      # actions/setup-dotnet v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+      with:
+        global-json-file: viu-benchmarks/global.json
+
+    # Only the machine-wide cache is restored. This repository's NuGet.config redirects
+    # globalPackagesFolder to viu-benchmarks/.nuget/packages, and that folder deliberately stays
+    # uncached: it holds the freshly packed Assimalign.Viu.* packages, whose version is reused
+    # across builds, so a cache hit there would serve a stale extract of a package whose contents
+    # changed. That is the exact trap NuGet.config's globalPackagesFolder comment describes.
+    - name: Cache NuGet packages (includes workload packs)
+      # actions/cache v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ~/.nuget/packages
+        # Central package versions live in the build targets; global.json pins the SDK.
+        key: >-
+          nuget-${{ runner.os }}-${{ hashFiles(
+            'viu-benchmarks/build/Targets/Build.References.Packages.targets',
+            'viu-benchmarks/global.json'
+          ) }}
+        restore-keys: |
+          nuget-${{ runner.os }}-
+
+    - name: Install wasm-tools Workload
+      if: inputs.install-wasm-tools == 'true'
+      shell: bash
+      run: dotnet workload install wasm-tools --skip-manifest-update

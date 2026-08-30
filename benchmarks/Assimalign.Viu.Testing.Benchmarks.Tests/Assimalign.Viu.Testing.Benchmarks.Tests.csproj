@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tests for the benchmark suite's harness plumbing ([V01.01.11.04], #88): scenario discovery, the
+    deterministic interop-count counters, baseline load/compare, and the demonstration that a deliberate
+    keyless bypass trips the interop-count gate. It references the benchmark app by name (the build
+    system indexes benchmarks/ and scripts/tests/) and copies the reviewed baseline beside its binary
+    so the gate test loads the real checked-in numbers.
+  -->
+  <PropertyGroup>
+    <TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ViuBenchmarkPackageReference Include="Microsoft.NET.Test.Sdk" />
+    <ViuBenchmarkPackageReference Include="xunit" />
+    <ViuBenchmarkPackageReference Include="xunit.runner.visualstudio" />
+    <ViuBenchmarkPackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- These sources compile against Assimalign.Viu.Testing directly (the op-log adapter), not only
+         against the benchmark app. Declaring it here rather than leaning on transitive package-asset
+         flow through the ProjectReference keeps the dependency explicit and survives any later
+         asset-restriction on the app's own reference. -->
+    <ViuBenchmarkPackageReference Include="Assimalign.Viu.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ViuBenchmarkProjectReference Include="Assimalign.Viu.Testing.Benchmarks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\baselines\InteropCounts.json" Link="baselines\InteropCounts.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

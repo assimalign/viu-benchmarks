@@ -1,0 +1,280 @@
+# Browser publish budgets ([V01.01.12.06], #95), restored to live CI by
+# [V01.01.12.26] (#320) with the real-browser startup lane from
+# [V01.01.12.06.01] (#182), and extracted from assimalign/viu into this
+# repository alongside the benchmark suite.
+#
+# The split of ownership after the extraction:
+#   - THIS repository owns the reviewed budgets (scripts/budgets/PublishBudgets.json)
+#     and the two checkers that enforce them.
+#   - The VIU repository owns the measurement subject: the packaged-consumer
+#     fixture scripts/fixtures/EndToEndBrowserApp, the Playwright harness, and
+#     scripts/Test-EndToEnd.ps1, which packs the framework and drives the browser.
+#
+# So every measuring lane checks both repositories out as siblings, packs Viu at
+# HEAD, publishes through Viu's own isolation, and then runs our checker with
+# -RepositoryRoot ../viu. Both checkers were built for exactly this: -ManifestPath
+# defaults to the manifest beside the script (ours) while sample project paths
+# resolve against -RepositoryRoot (Viu's). CI never rewrites the manifest.
+#
+# Cost split:
+#   - The hermetic checker tests run on every relevant pull request and push. They
+#     drive the scripts over on-disk fixtures and need no Viu checkout at all.
+#   - One normal trimmed publish enforces payload size and trim warnings without
+#     paying for WebAssembly AOT compilation or browser repetition.
+#   - The explicit AOT publish and real-browser startup gate run on the weekly
+#     schedule and workflow_dispatch. Startup includes one warm-up plus at least
+#     ten measured Chromium boots, so it is intentionally not a per-PR lane.
+#   - Deterministic interop-count budgets remain a cheap per-PR gate in
+#     benchmarks.yml against benchmarks/baselines/InteropCounts.json [RND-IO-5].
+name: budget-gates
+
+on:
+  workflow_dispatch:
+  # The measurement subject lives in the Viu repository, so a path filter here
+  # cannot see a change to it. The weekly run is what keeps these budgets honest.
+  schedule:
+    - cron: '17 7 * * 1'
+  push:
+    branches: [main, 'release/**']
+    paths:
+      - 'scripts/**'
+      - 'build/**'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'global.json'
+      - 'nuget.config'
+      - '.editorconfig'
+      - '.github/actions/**'
+      - '.github/workflows/budget-gates.yml'
+  pull_request:
+    branches: [main, 'release/**']
+    paths:
+      - 'scripts/**'
+      - 'build/**'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'global.json'
+      - 'nuget.config'
+      - '.editorconfig'
+      - '.github/actions/**'
+      - '.github/workflows/budget-gates.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  gate-tests:
+    name: budget checker tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout benchmarks
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: viu-benchmarks
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: ./viu-benchmarks/.github/actions/setup-dotnet
+
+      # This is the one lane that needs no Viu checkout: the tests drive the checker
+      # scripts over on-disk fixtures. nuget.config still declares the sibling
+      # viu-local folder source, and a declared local source that does not exist on
+      # disk fails restore even when package source mapping routes nothing to it, so
+      # materialize it empty rather than making this lane pay for a pack.
+      - name: Create the empty sibling package feed
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path viu/_out/packages | Out-Null
+
+      - name: Build and test budget checkers
+        working-directory: viu-benchmarks
+        run: >-
+          dotnet test
+          scripts/tests/Assimalign.Viu.PublishBudget.Tests/Assimalign.Viu.PublishBudget.Tests.csproj
+          --configuration Release
+          -warnaserror
+
+  size:
+    name: publish-size and trimming gate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout benchmarks
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: viu-benchmarks
+          persist-credentials: false
+
+      - name: Checkout Viu
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: assimalign/viu
+          path: viu
+          persist-credentials: false
+
+      # A second build is intentionally avoided: the base revision's reviewed
+      # measured value supplies the informational delta while the head revision
+      # alone is packed and published.
+      - name: Checkout base budget manifest
+        if: github.event_name == 'pull_request'
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: budget-base
+          persist-credentials: false
+          sparse-checkout: scripts/budgets/PublishBudgets.json
+          sparse-checkout-cone-mode: 'false'
+
+      - name: Set up .NET with wasm-tools
+        uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with:
+          install-wasm-tools: 'true'
+
+      # The tracked fixture is a package consumer of Assimalign.Viu.Sdk.Browser.
+      # Test-EndToEnd owns the pack itself (it runs Install-Local.ps1 unless
+      # -SkipPack), so these lanes deliberately do NOT run the pack-viu action —
+      # doing both packed the whole framework twice and nothing here restores from
+      # the first feed. It isolates the SDK version, local feed, cache, restore, and
+      # publish, and guards its output paths as children of the Viu repository's own
+      # _out — which is why the publish lands there and the checker reads it back
+      # through -RepositoryRoot rather than being redirected here.
+      - name: Publish isolated trimmed fixture
+        shell: pwsh
+        working-directory: viu
+        run: >-
+          ./scripts/Test-EndToEnd.ps1
+          -PublishOnly
+          -PublishDirectory ./_out/budgets/trimmed
+
+      - name: Measure trimmed fixture and enforce budget
+        shell: pwsh
+        working-directory: viu-benchmarks
+        run: |
+          $parameters = @{
+            RepositoryRoot = '../viu'
+            SampleName = 'EndToEndBrowserApp'
+            PublishDirectory = '../viu/_out/budgets/trimmed'
+            ResultsPath = '../viu/_out/budgets/publish-results.json'
+          }
+          $baseManifest = '../budget-base/scripts/budgets/PublishBudgets.json'
+          if (Test-Path -LiteralPath $baseManifest) {
+            $parameters.BaselineManifestPath = $baseManifest
+          }
+          ./scripts/Measure-PublishBudget.ps1 @parameters
+
+      - name: Upload publish measurement
+        if: always()
+        # actions/upload-artifact v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: publish-budget-results
+          path: viu/_out/budgets/publish-results.json
+          if-no-files-found: ignore
+
+  aot:
+    name: AOT compilation lane
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout benchmarks
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: viu-benchmarks
+          persist-credentials: false
+
+      - name: Checkout Viu
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: assimalign/viu
+          path: viu
+          persist-credentials: false
+
+      - name: Set up .NET with wasm-tools
+        uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with:
+          install-wasm-tools: 'true'
+
+      - name: Publish fixture with AOT compilation
+        shell: pwsh
+        working-directory: viu
+        run: >-
+          ./scripts/Test-EndToEnd.ps1
+          -PublishOnly
+          -PublishDirectory ./_out/budgets/aot
+          -Aot
+
+  startup:
+    name: startup-time gate
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout benchmarks
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: viu-benchmarks
+          persist-credentials: false
+
+      - name: Checkout Viu
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: assimalign/viu
+          path: viu
+          persist-credentials: false
+
+      # A manual run from a topic branch compares with the default branch's
+      # reviewed startup calibration. A scheduled default-branch run compares
+      # with that same reviewed baseline without doubling the browser workload.
+      - name: Checkout base budget manifest
+        # actions/checkout v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: budget-base
+          persist-credentials: false
+          sparse-checkout: scripts/budgets/PublishBudgets.json
+          sparse-checkout-cone-mode: 'false'
+
+      - name: Set up .NET with wasm-tools
+        uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with:
+          install-wasm-tools: 'true'
+
+      # Test-EndToEnd owns the package-consumer build, trimmed publish, static
+      # server, Chromium lifecycle, and boot-to-interactive marker. The checker
+      # independently validates its stable JSON and recomputes the median.
+      - name: Measure real-browser startup
+        shell: pwsh
+        working-directory: viu
+        run: >-
+          ./scripts/Test-EndToEnd.ps1
+          -MeasureStartup
+          -StartupResultsPath ./_out/budgets/startup-results.json
+          -StartupWarmupRuns 1
+          -StartupMeasuredRuns 10
+
+      - name: Enforce startup budget
+        shell: pwsh
+        working-directory: viu-benchmarks
+        run: >-
+          ./scripts/Test-StartupBudget.ps1
+          -ResultsPath ../viu/_out/budgets/startup-results.json
+          -BaselineManifestPath ../budget-base/scripts/budgets/PublishBudgets.json
+
+      - name: Upload startup measurement
+        if: always()
+        # actions/upload-artifact v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: startup-budget-results
+          path: viu/_out/budgets/startup-results.json
+          if-no-files-found: ignore

@@ -1,0 +1,9 @@
+# Normalize line endings in the repository so a Windows and a Linux checkout agree.
+# The budget checkers are byte-sensitive about the payloads they measure, not about their own
+# source, but CI runs on ubuntu while calibration runs happen on Windows — pinning this removes a
+# whole class of "only reproduces on one OS" difference.
+* text=auto
+
+# PowerShell checkers run under pwsh on both platforms; keep them LF so the shebang-less scripts
+# and here-strings are byte-identical everywhere.
+*.ps1 text eol=lf

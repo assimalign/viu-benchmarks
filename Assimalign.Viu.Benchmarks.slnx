@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/solution/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/solution/build/">
+    <File Path="build/Build.props" />
+    <File Path="build/Build.targets" />
+    <File Path="build/Targets/Build.Global.props" />
+    <File Path="build/Targets/Build.References.Packages.targets" />
+    <File Path="build/Targets/Build.References.Projects.targets" />
+    <File Path="build/Targets/Build.TargetFramework.props" />
+  </Folder>
+  <Folder Name="/solution/workflows/">
+    <File Path=".github/workflows/benchmarks.yml" />
+    <File Path=".github/workflows/budget-gates.yml" />
+  </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj" />
+    <Project Path="benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests/Assimalign.Viu.Testing.Benchmarks.Tests.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/baselines/">
+    <File Path="benchmarks/baselines/InteropCounts.json" />
+  </Folder>
+  <Folder Name="/budgets/">
+    <Project Path="scripts/tests/Assimalign.Viu.PublishBudget.Tests/Assimalign.Viu.PublishBudget.Tests.csproj" />
+    <File Path="scripts/Measure-PublishBudget.ps1" />
+    <File Path="scripts/Test-StartupBudget.ps1" />
+    <File Path="scripts/budgets/PublishBudgets.json" />
+  </Folder>
+</Solution>

@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <TargetFrameworkLatest>net10.0</TargetFrameworkLatest>
+    <TargetFrameworkForLibraries>$(TargetFrameworkLatest)</TargetFrameworkForLibraries>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <RollForward>LatestPatch</RollForward>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>Preview</LangVersion>
+    <!--
+      C# preview language features are controlled independently by LangVersion. Runtime preview
+      APIs stay disabled to match the Viu package line these harnesses measure.
+    -->
+    <EnablePreviewFeatures>false</EnablePreviewFeatures>
+  </PropertyGroup>
+</Project>

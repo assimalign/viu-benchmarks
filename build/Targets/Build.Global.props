@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    Repository anchor. Every scan root and asset path in this build hangs off
+    ViuBenchmarksRepositoryDirectory, so the whole system rebases automatically as long as
+    this file stays two levels below the repository root (build\Targets\).
+  -->
+  <PropertyGroup>
+    <ViuBenchmarksRepositoryDirectory>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..\..'))\</ViuBenchmarksRepositoryDirectory>
+  </PropertyGroup>
+
+  <!--
+    Language settings are deliberately identical to the Viu repository these sources came from:
+    the benchmark and checker sources were written under Nullable=enable, LangVersion=preview and
+    EnforceCodeStyleInBuild=true, and relaxing any of them here would silently stop enforcing a
+    rule the code already satisfies.
+  -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>preview</LangVersion>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    Nothing in this repository ships. Every project is a measurement harness or its tests, so
+    packability, packaging metadata and repository branding are deliberately absent: stamping the
+    Viu repository's identity onto a benchmark assembly would make SourceLink resolve these
+    sources against the wrong repository.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(ViuBenchmarksRepositoryDirectory).editorconfig')">
+    <AdditionalFiles Include="$(ViuBenchmarksRepositoryDirectory).editorconfig" />
+  </ItemGroup>
+</Project>

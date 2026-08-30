@@ -1,0 +1,64 @@
+<Project>
+
+  <!--
+    Central package catalog, the same by-name convention the Viu repository uses
+    (build/Targets/Build.References.Packages.targets there): a csproj names a package and never a
+    version, and the version is decided here exactly once.
+  -->
+
+  <PropertyGroup>
+    <!--
+      The Viu package line these harnesses measure.
+
+      This is a real gate input, not a convenience pin. The interop-count gate compares node-op
+      counts against benchmarks/baselines/InteropCounts.json, so the numbers only mean something
+      relative to a known renderer build. CI's paired-checkout lane packs the Viu repository at
+      HEAD and passes -p:ViuVersion=<packed version>, which is why this is overridable rather
+      than hard-coded at the item.
+    -->
+    <ViuVersion Condition="'$(ViuVersion)' == ''">10.0.0-beta.11</ViuVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      The measured framework. Assimalign.Viu.Reactivity, .Components and .State arrive
+      transitively through Assimalign.Viu.Core's package dependencies; the benchmark sources use
+      only public API, so no InternalsVisibleTo grant is involved.
+    -->
+    <_ViuBenchmarkPackage Include="Assimalign.Viu.Core" Version="$(ViuVersion)" />
+    <_ViuBenchmarkPackage Include="Assimalign.Viu.ServerRenderer" Version="$(ViuVersion)" />
+    <!-- The in-memory adapter whose op log is the interop-crossing proxy. -->
+    <_ViuBenchmarkPackage Include="Assimalign.Viu.Testing" Version="$(ViuVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BenchmarkDotNet hosts the DOM-free micro/meso benchmarks on CoreCLR. Wall-clock numbers
+         are environment-relative, so they are published as artifacts and never gate. -->
+    <_ViuBenchmarkPackage Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ViuBenchmarkPackage Include="Shouldly" Version="4.3.0" />
+    <_ViuBenchmarkPackage Include="xunit" Version="2.9.3" />
+    <_ViuBenchmarkPackage Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <_ViuBenchmarkPackage Include="xunit.runner.visualstudio" Version="3.1.5"
+        IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive"
+        PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- #region: Package Reference Update -->
+  <ItemGroup>
+    <!--
+      Metadata declared on the central catalog does not flow through an Update automatically.
+      Copy every package-control field used above while preserving project-local metadata when
+      the catalog leaves that field unspecified.
+    -->
+    <ViuBenchmarkPackageReference Update="@(_ViuBenchmarkPackage)" Version="%(_ViuBenchmarkPackage.Version)">
+      <PrivateAssets Condition="'%(_ViuBenchmarkPackage.PrivateAssets)' != ''">%(_ViuBenchmarkPackage.PrivateAssets)</PrivateAssets>
+      <IncludeAssets Condition="'%(_ViuBenchmarkPackage.IncludeAssets)' != ''">%(_ViuBenchmarkPackage.IncludeAssets)</IncludeAssets>
+    </ViuBenchmarkPackageReference>
+    <PackageReference Include="@(ViuBenchmarkPackageReference)" />
+    <ViuBenchmarkPackageReference Remove="@(ViuBenchmarkPackageReference)" />
+  </ItemGroup>
+  <!-- #endregion -->
+</Project>

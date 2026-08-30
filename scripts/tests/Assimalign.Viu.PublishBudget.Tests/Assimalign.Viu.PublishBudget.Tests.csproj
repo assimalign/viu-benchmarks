@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tests for the publish-size and startup budget gates ([V01.01.12.06], #95; startup lane
+    [V01.01.12.06.01], #182). The gates are cross-platform PowerShell scripts
+    (scripts/Measure-PublishBudget.ps1, scripts/Test-StartupBudget.ps1); these tests drive them over
+    deterministic on-disk fixtures via pwsh and assert the measurement, exclusion, gating, delta, and
+    exit-code behavior. They never run a real `dotnet publish` and never need a Viu checkout, so this
+    is the one lane in this repository that is fully hermetic — the publish path is covered by the
+    budget-gates CI workflow itself. No project reference is needed (the artifact under test is a
+    script), so this project stays clear of the ViuBenchmarkProjectReference name resolution.
+  -->
+  <PropertyGroup>
+    <TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ViuBenchmarkPackageReference Include="Microsoft.NET.Test.Sdk" />
+    <ViuBenchmarkPackageReference Include="xunit" />
+    <ViuBenchmarkPackageReference Include="xunit.runner.visualstudio" />
+    <ViuBenchmarkPackageReference Include="Shouldly" />
+  </ItemGroup>
+</Project>

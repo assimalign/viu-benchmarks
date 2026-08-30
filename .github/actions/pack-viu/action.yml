@@ -1,0 +1,61 @@
+# Packs the paired Viu checkout into its repo-local feed so this repository measures Viu at HEAD
+# rather than a frozen version pin.
+#
+# This is the mechanism that keeps the interop-count gate meaningful after the extraction. The
+# benchmark sources consume Viu as packages, and a fixed pin would only re-measure when somebody
+# remembered to bump it — the gate would stop watching the renderer, which is the one thing it
+# exists to watch. Packing HEAD and threading the resulting version through -p:ViuVersion restores
+# that coupling without a project reference across repository boundaries.
+#
+# Only the benchmark lanes use this. The budget lanes hand off to Viu's own scripts/Test-EndToEnd.ps1,
+# which packs the SDK and shared-framework chains itself; running both would pack the whole framework
+# twice. That is why this action is libraries-only and has no "also pack the SDK" switch.
+#
+# The two checkouts must be siblings in the workspace (viu-benchmarks/ and viu/), because
+# viu-benchmarks/nuget.config resolves its viu-local source as ..\viu\_out\packages relative to
+# the configuration file.
+name: Pack the paired Viu checkout
+description: >-
+  Packs the assimalign/viu libraries into viu/_out/packages and reports the version that was packed.
+
+outputs:
+  viu-version:
+    description: The Viu package version that was packed, for -p:ViuVersion.
+    value: ${{ steps.version.outputs.viu-version }}
+
+runs:
+  using: composite
+  steps:
+    # -SkipSdk -SkipFramework keeps this to the libraries the benchmarks reference and avoids
+    # needing the WebAssembly workload at all; the benchmark suite is pure CoreCLR.
+    - name: Pack Viu libraries
+      shell: pwsh
+      working-directory: viu
+      run: |
+        & ./scripts/Install-Local.ps1 -SkipSdk -SkipFramework
+        if ($LASTEXITCODE -ne 0) {
+          throw "Packing Viu failed with exit code $LASTEXITCODE."
+        }
+
+    # The packed version is derived from the artifact rather than re-parsing Viu's MSBuild version
+    # arithmetic: Build.Version.props composes the major from the target framework, so the file
+    # alone does not carry the answer as text.
+    - name: Resolve packed version
+      id: version
+      shell: pwsh
+      run: |
+        $packages = @(Get-ChildItem -Path 'viu/_out/packages' -Filter 'Assimalign.Viu.Core.*.nupkg' -ErrorAction SilentlyContinue)
+        if ($packages.Count -eq 0) {
+          throw 'Packing Viu produced no Assimalign.Viu.Core package in viu/_out/packages.'
+        }
+        if ($packages.Count -gt 1) {
+          throw "Expected exactly one Assimalign.Viu.Core package, found $($packages.Count): $($packages.Name -join ', ')."
+        }
+
+        $version = $packages[0].BaseName -replace '^Assimalign\.Viu\.Core\.', ''
+        if ([string]::IsNullOrWhiteSpace($version)) {
+          throw "Could not parse a version out of $($packages[0].Name)."
+        }
+
+        "viu-version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        Write-Host "Packed Viu version: $version"
