@@ -65,6 +65,10 @@
     publishing the base revision a second time. A measured BaselineResultsPath takes
     precedence. The current manifest's reviewed baseline is the fallback.
 
+.PARAMETER MeasureOnlyPayload
+    Measures an existing PublishDirectory without loading an application budget. Reports totals
+    and managed DLL/WebCIL raw and brotli sizes; no pass/fail budget result is invented.
+
 .PARAMETER NoGate
     Measure and report only; never set a failing exit code. Used for the base-branch
     measurement, which is informational, not a gate.
@@ -89,6 +93,7 @@ param(
     [string] $BaselineResultsPath,
     [string] $BaselineManifestPath,
     [switch] $NoGate,
+    [switch] $MeasureOnlyPayload,
     [string] $PublishOutputRoot
 )
 
@@ -299,12 +304,33 @@ function Measure-PayloadDirectory {
     $compressed = [long] 0
     $raw = [long] 0
     $fileCount = 0
+    $assemblies = [System.Collections.Generic.List[object]]::new()
     $files = Get-ChildItem -LiteralPath $PayloadRoot -Recurse -File
     foreach ($file in $files) {
         if ($excludedPayloadExtensions -contains $file.Extension.ToLowerInvariant()) {
             continue
         }
-        $compressed += Get-BrotliByteCount $file.FullName
+        $brotliBytes = Get-BrotliByteCount $file.FullName
+        $compressed += $brotliBytes
+        $isAssembly = $file.Extension -eq '.dll'
+        if ($file.Extension -eq '.wasm') {
+            # WebCIL wrappers import their memory from the webcil module. Inspect only the
+            # wrapper header; native runtime WASM must not be counted as a managed assembly.
+            $stream = [IO.File]::OpenRead($file.FullName)
+            try {
+                $header = [byte[]]::new(512)
+                $read = $stream.Read($header, 0, $header.Length)
+                $isAssembly = $read -ge 8 -and $header[0] -eq 0 -and $header[1] -eq 97 -and $header[2] -eq 115 -and $header[3] -eq 109 -and [Text.Encoding]::ASCII.GetString($header,0,$read).Contains('webcil')
+            } finally { $stream.Dispose() }
+        }
+        if ($isAssembly) {
+            $assemblies.Add([pscustomobject]@{
+                assembly = ([IO.Path]::GetFileNameWithoutExtension($file.Name) -replace '\.[a-z0-9]{10}$','')
+                file = [IO.Path]::GetRelativePath($PayloadRoot,$file.FullName).Replace('\','/')
+                rawBytes = [long]$file.Length
+                compressedBytes = [long]$brotliBytes
+            })
+        }
         $raw += $file.Length
         $fileCount++
     }
@@ -312,6 +338,7 @@ function Measure-PayloadDirectory {
         CompressedPublishSizeBytes = $compressed
         RawPublishSizeBytes        = $raw
         FileCount                  = $fileCount
+        Assemblies                 = @($assemblies | Sort-Object assembly,file)
     }
 }
 
@@ -363,6 +390,22 @@ function Invoke-SamplePublish {
     }
 }
 
+# The benchmark app has no reviewed application-size budget. Reuse measurement without
+# pretending that a different sample's budget applies to it. [V01.01.11.04.01], #225.
+if ($MeasureOnlyPayload) {
+    if (-not $PublishDirectory -or -not (Test-Path -LiteralPath $PublishDirectory -PathType Container)) {
+        Exit-WithError 'MeasureOnlyPayload requires an existing PublishDirectory.'
+    }
+    $payload = Measure-PayloadDirectory (Resolve-PayloadRoot $PublishDirectory)
+    if ($ResultsPath) {
+        $resultsDirectory = Split-Path ([IO.Path]::GetFullPath($ResultsPath)) -Parent
+        [IO.Directory]::CreateDirectory($resultsDirectory) | Out-Null
+        $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $ResultsPath -Encoding utf8
+    }
+    Write-Report ("Measured payload: {0} raw, {1} brotli bytes; {2} managed assemblies." -f $payload.RawPublishSizeBytes,$payload.CompressedPublishSizeBytes,$payload.Assemblies.Count)
+    foreach ($assembly in $payload.Assemblies) { Write-Report ("  {0}: {1} raw / {2} brotli bytes" -f $assembly.assembly,$assembly.rawBytes,$assembly.compressedBytes) }
+    exit 0
+}
 # --- Load the manifest ----------------------------------------------------------
 
 if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
@@ -477,6 +520,7 @@ foreach ($sample in $samples) {
             headroomBytes              = ($budgetBytes - $actualBytes)
             deltaOverBudgetBytes       = [Math]::Max(0, $actualBytes - $budgetBytes)
             fileCount                  = $measurement.FileCount
+            assemblies                 = $measurement.Assemblies
             baselineBytes              = $baselineBytes
         }) | Out-Null
 }
@@ -510,6 +554,12 @@ foreach ($result in $results) {
 Write-Report ('-' * $header.Length)
 $measuredCount = $results.Count
 $passedCount = $measuredCount - $overCount
+foreach ($result in $results) {
+    Write-Report "Managed assemblies for $($result.name) (raw / brotli bytes):"
+    foreach ($assembly in $result.assemblies) {
+        Write-Report ("  {0}: {1} / {2} ({3})" -f $assembly.assembly,$assembly.rawBytes,$assembly.compressedBytes,$assembly.file)
+    }
+}
 Write-Report ("Result: {0} ({1}/{2} within budget)" -f (($overCount -eq 0) ? 'PASS' : 'FAIL'), $passedCount, $measuredCount)
 if ($overCount -gt 0) {
     Write-Report ''

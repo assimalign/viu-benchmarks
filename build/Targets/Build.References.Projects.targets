@@ -17,8 +17,9 @@
         reference into a sibling working tree.
     -->
     <ItemGroup>
-        <!-- Index code projects ONCE: the benchmark suite and the budget-checker tests. -->
-        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\**\*.csproj" />
+        <!-- Index code projects ONCE: area suites, shared harnesses and their tests, and budget-checker tests. -->
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\**\*.csproj" Exclude="**\bin\**;**\obj\**" />
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)harness\**\*.csproj" Exclude="**\bin\**;**\obj\**" />
         <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)scripts\tests\**\*.csproj" />
         <_ViuBenchmarkProject Update="@(_ViuBenchmarkProject)" ProjectId="%(_ViuBenchmarkProject.Filename)" ProjectPath="%(_ViuBenchmarkProject.Identity)" />
 

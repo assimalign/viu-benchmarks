@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework></PropertyGroup>
+  <ItemGroup><ViuBenchmarkPackageReference Include="BenchmarkDotNet" /></ItemGroup>
+</Project>

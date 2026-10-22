@@ -20,9 +20,9 @@
     renderer rather than a frozen pin.
 
     The packaged-consumer Playwright harness ([V01.01.11.03], #87) supplies real-browser
-    publish/serve/drive plumbing and remains in the Viu repository. Benchmark-specific wall-clock,
-    live interop-crossing, and per-assembly payload instrumentation remains deferred under #88 (see
-    Browser/DeferredBrowserBenchmarks.cs and .github/workflows/benchmarks.yml), never faked.
+    publish/serve/drive plumbing and remains in the Viu repository. The separate Browser subject
+    and scripts/Invoke-BrowserBenchmarks.ps1 measure real WASM elapsed time, command-buffer frames,
+    and per-assembly publish payload; this legacy harness remains the deterministic adapter gate.
   -->
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework>
@@ -48,6 +48,6 @@
   <ItemGroup>
     <!-- The reviewed interop-count baseline travels with the app so the gate can find it beside the
          binary in CI, and a local interop run compares against the checked-in numbers. -->
-    <Content Include="..\baselines\InteropCounts.json" Link="baselines\InteropCounts.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\baselines\InteropCounts.json" Link="baselines\InteropCounts.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
