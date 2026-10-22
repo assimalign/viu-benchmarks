@@ -164,7 +164,7 @@ jobs:
       - name: Upload interop-count results
         if: always()
         # actions/upload-artifact v4
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: interop-count-results
           path: viu-benchmarks/_out/benchmarks/interop-results.json
@@ -198,7 +198,7 @@ jobs:
       - name: Test report tooling
         working-directory: viu-benchmarks
         run: dotnet test scripts/tests/Assimalign.Viu.PublishBudget.Tests -c Release
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: area-results-linux-x64-jit
@@ -237,7 +237,7 @@ jobs:
           ./scripts/Prepare-EditorSubject.ps1 -Vsix ../viu/_out/extensions/VisualStudio/Release/Assimalign.Viu.VisualStudio.vsix
           ./scripts/Invoke-Benchmarks.ps1 -Scope tooling -Area Editor -Profile ci -ViuVersion '${{ steps.viu.outputs.viu-version }}' -Output .artifacts/ci
           ./scripts/ConvertTo-BenchmarkHistory.ps1 -Path .artifacts/ci -TimeOutput .artifacts/time-windows-x64-jit.json -AllocationOutput .artifacts/allocations-windows-x64-jit.json -ViuVersion '${{ steps.viu.outputs.viu-version }}' -ViuCommit (git -C ../viu rev-parse HEAD)
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: editor-results-windows-x64-jit
@@ -269,6 +269,6 @@ jobs:
         shell: pwsh
         working-directory: viu-benchmarks
         run: ./scripts/Invoke-BrowserBenchmarks.ps1 -ViuVersion '${{ steps.viu.outputs.viu-version }}' -Output .artifacts/browser
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with: { name: browser-results-chromium-linux-x64, path: 'viu-benchmarks/.artifacts/browser/**', retention-days: 90 }
