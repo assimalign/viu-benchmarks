@@ -8,8 +8,8 @@
 # that coupling without a project reference across repository boundaries.
 #
 # Only the benchmark lanes use this. The budget lanes hand off to Viu's own scripts/Test-EndToEnd.ps1,
-# which packs the SDK and shared-framework chains itself; running both would pack the whole framework
-# twice. That is why this action is libraries-only and has no "also pack the SDK" switch.
+# which packs the SDK and shared-framework chains itself. Area/editor/browser lanes request full
+# packing; legacy interop-only lanes use the default library-only path to avoid redundant SDK work.
 #
 # The two checkouts must be siblings in the workspace (viu-benchmarks/ and viu/), because
 # viu-benchmarks/nuget.config resolves its viu-local source as ..\viu\_out\packages relative to
@@ -18,6 +18,10 @@ name: Pack the paired Viu checkout
 description: >-
   Packs the assimalign/viu libraries into viu/_out/packages and reports the version that was packed.
 
+inputs:
+  full:
+    description: Pack SDKs and framework analyzer/runtime closures as well as libraries
+    default: 'false'
 outputs:
   viu-version:
     description: The Viu package version that was packed, for -p:ViuVersion.
@@ -32,7 +36,7 @@ runs:
       shell: pwsh
       working-directory: viu
       run: |
-        & ./scripts/Install-Local.ps1 -SkipSdk -SkipFramework
+        if ('${{ inputs.full }}' -eq 'true') { & ./scripts/Install-Local.ps1 } else { & ./scripts/Install-Local.ps1 -SkipSdk -SkipFramework }
         if ($LASTEXITCODE -ne 0) {
           throw "Packing Viu failed with exit code $LASTEXITCODE."
         }

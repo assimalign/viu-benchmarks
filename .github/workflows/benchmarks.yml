@@ -12,17 +12,21 @@
 #     repository. The gate compares each scenario's interop-crossing count to the reviewed
 #     baseline (benchmarks/baselines/InteropCounts.json) and fails a regression. Counts are
 #     machine-independent, so this is a real gate, not a noisy timing.
-#   - timings: BenchmarkDotNet wall-clock numbers are environment-relative and noisy, so this lane
-#     is opt-in (workflow_dispatch or the 'benchmark-run' label), never a gate — the AOT-lane
-#     cost-control pattern. It publishes results as artifacts.
-#   - browser: WIRED-BUT-SKIPPED. The packaged-consumer Playwright harness exists in the Viu
-#     repository, but #88 still needs benchmark-specific timing, live command-buffer, and
-#     per-assembly payload instrumentation before this lane can produce reviewed measurements.
-#     ENABLE_BROWSER_BENCHMARKS remains the explicit guard.
+#   - areas, editor, browser: real measurements with separate host provenance and machine-readable history artifacts.
 name: benchmarks
 
 on:
   workflow_dispatch:
+    inputs:
+      viu-ref:
+        description: Viu branch, tag, or commit to measure
+        type: string
+        default: main
+      profile:
+        description: Measurement profile
+        type: choice
+        options: [ci, dry]
+        default: ci
   # Viu's renderer changes in a different repository, so a push filter here cannot see them. The
   # daily run is what keeps the interop gate honest against Viu HEAD.
   schedule:
@@ -31,6 +35,11 @@ on:
     branches: [main, 'release/**']
     paths:
       - 'benchmarks/**'
+      - 'harness/**'
+      - 'scripts/**'
+      - 'site/**'
+      - 'Assimalign.Viu.Benchmarks.slnx'
+      - 'CONVENTIONS.md'
       - 'build/**'
       - 'Directory.Build.props'
       - 'Directory.Build.targets'
@@ -43,6 +52,11 @@ on:
     branches: [main, 'release/**']
     paths:
       - 'benchmarks/**'
+      - 'harness/**'
+      - 'scripts/**'
+      - 'site/**'
+      - 'Assimalign.Viu.Benchmarks.slnx'
+      - 'CONVENTIONS.md'
       - 'build/**'
       - 'Directory.Build.props'
       - 'Directory.Build.targets'
@@ -76,6 +90,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: assimalign/viu
+          ref: ${{ inputs.viu-ref || github.head_ref || 'main' }}
           path: viu
           persist-credentials: false
 
@@ -90,14 +105,14 @@ jobs:
       - name: Build (warnings are errors)
         working-directory: viu-benchmarks
         run: >-
-          dotnet build benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests/Assimalign.Viu.Testing.Benchmarks.Tests.csproj
+          dotnet build harness/Assimalign.Viu.Testing.Benchmarks/test/Assimalign.Viu.Testing.Benchmarks.Tests.csproj
           --configuration Release -warnaserror
           -p:ViuVersion=${{ steps.viu.outputs.viu-version }}
 
       - name: Test
         working-directory: viu-benchmarks
         run: >-
-          dotnet test benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests/Assimalign.Viu.Testing.Benchmarks.Tests.csproj
+          dotnet test harness/Assimalign.Viu.Testing.Benchmarks/test/Assimalign.Viu.Testing.Benchmarks.Tests.csproj
           --configuration Release --no-build
           -p:ViuVersion=${{ steps.viu.outputs.viu-version }}
 
@@ -117,6 +132,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: assimalign/viu
+          ref: ${{ inputs.viu-ref || github.head_ref || 'main' }}
           path: viu
           persist-credentials: false
 
@@ -130,7 +146,7 @@ jobs:
       - name: Build benchmark app (warnings are errors)
         working-directory: viu-benchmarks
         run: >-
-          dotnet build benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj
+          dotnet build harness/Assimalign.Viu.Testing.Benchmarks/src/Assimalign.Viu.Testing.Benchmarks.csproj
           --configuration Release -warnaserror
           -p:ViuVersion=${{ steps.viu.outputs.viu-version }}
 
@@ -141,7 +157,7 @@ jobs:
       - name: Interop-count gate
         working-directory: viu-benchmarks
         run: >-
-          dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj
+          dotnet run --project harness/Assimalign.Viu.Testing.Benchmarks/src/Assimalign.Viu.Testing.Benchmarks.csproj
           --configuration Release --no-build
           -- interop --gate --results _out/benchmarks/interop-results.json
 
@@ -154,101 +170,105 @@ jobs:
           path: viu-benchmarks/_out/benchmarks/interop-results.json
           if-no-files-found: ignore
 
-  timings:
-    name: wall-clock timings (opt-in)
-    # Cost control (the AOT-lane pattern): BenchmarkDotNet timings are noisy and environment-relative,
-    # so they never gate and do not run on every PR. Trigger manually (workflow_dispatch) or with the
-    # 'benchmark-run' label. Numbers are published as artifacts for inspection.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'benchmark-run'))
+  areas:
+    name: area suites (Linux x64 JIT)
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout benchmarks
-        # actions/checkout v4
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          path: viu-benchmarks
-          persist-credentials: false
-
-      - name: Checkout Viu
-        # actions/checkout v4
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: { path: viu-benchmarks, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: assimalign/viu
+          ref: ${{ inputs.viu-ref || github.head_ref || 'main' }}
           path: viu
           persist-credentials: false
-
-      - name: Set up .NET
-        uses: ./viu-benchmarks/.github/actions/setup-dotnet
-
-      - name: Pack Viu
+      - uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with: { install-wasm-tools: 'true' }
+      - uses: ./viu-benchmarks/.github/actions/pack-viu
         id: viu
-        uses: ./viu-benchmarks/.github/actions/pack-viu
-
-      - name: Build benchmark app (Release)
+        with: { full: 'true' }
+      - name: Build and execute every non-editor area
+        shell: pwsh
         working-directory: viu-benchmarks
-        run: >-
-          dotnet build benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj
-          --configuration Release
-          -p:ViuVersion=${{ steps.viu.outputs.viu-version }}
-
-      # A short run keeps CI time bounded; drop --smoke for full statistical passes when investigating.
-      - name: Run benchmarks (short)
+        run: |
+          $profile = if ('${{ github.event_name }}' -notin @('schedule','workflow_dispatch')) { 'dry' } elseif ('${{ inputs.profile }}') { '${{ inputs.profile }}' } else { 'ci' }
+          ./scripts/Invoke-Benchmarks.ps1 -ExcludeArea Editor -Profile $profile -ViuVersion '${{ steps.viu.outputs.viu-version }}' -Output .artifacts/ci
+          $revision = git -C ../viu rev-parse HEAD
+          if ($profile -ne 'dry') { ./scripts/ConvertTo-BenchmarkHistory.ps1 -Path .artifacts/ci -TimeOutput .artifacts/time-linux-x64-jit.json -AllocationOutput .artifacts/allocations-linux-x64-jit.json -ViuVersion '${{ steps.viu.outputs.viu-version }}' -ViuCommit $revision }
+      - name: Test report tooling
         working-directory: viu-benchmarks
-        run: >-
-          dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj
-          --configuration Release --no-build
-          -- benchmarks --smoke --filter '*'
-          --artifacts _out/benchmarks/artifacts
-
-      - name: Upload benchmark artifacts
+        run: dotnet test scripts/tests/Assimalign.Viu.PublishBudget.Tests -c Release
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()
-        # actions/upload-artifact v4
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: benchmark-timings
-          path: viu-benchmarks/_out/benchmarks/artifacts/**
-          if-no-files-found: ignore
+          name: area-results-linux-x64-jit
+          path: |
+            viu-benchmarks/.artifacts/ci/**
+            viu-benchmarks/.artifacts/*-jit.json
+            viu-benchmarks/.artifacts/subjects/editor/subject.json
+          retention-days: 90
+
+  editor:
+    name: packaged editor requests (Windows x64 JIT)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: { path: viu-benchmarks, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: assimalign/viu
+          ref: ${{ inputs.viu-ref || github.head_ref || 'main' }}
+          path: viu
+          persist-credentials: false
+      - uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with: { install-wasm-tools: 'true' }
+      - uses: ./viu-benchmarks/.github/actions/pack-viu
+        id: viu
+        with: { full: 'true' }
+      - name: Build the actual Visual Studio package
+        shell: pwsh
+        working-directory: viu
+        run: ./extensions/VisualStudio/Assimalign.Viu.VisualStudio/Build.ps1 -Configuration Release
+      - name: Prepare and measure the packaged server
+        shell: pwsh
+        working-directory: viu-benchmarks
+        run: |
+          ./scripts/Prepare-EditorSubject.ps1 -Vsix ../viu/_out/extensions/VisualStudio/Release/Assimalign.Viu.VisualStudio.vsix
+          ./scripts/Invoke-Benchmarks.ps1 -Scope tooling -Area Editor -Profile ci -ViuVersion '${{ steps.viu.outputs.viu-version }}' -Output .artifacts/ci
+          ./scripts/ConvertTo-BenchmarkHistory.ps1 -Path .artifacts/ci -TimeOutput .artifacts/time-windows-x64-jit.json -AllocationOutput .artifacts/allocations-windows-x64-jit.json -ViuVersion '${{ steps.viu.outputs.viu-version }}' -ViuCommit (git -C ../viu rev-parse HEAD)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: editor-results-windows-x64-jit
+          path: |
+            viu-benchmarks/.artifacts/ci/**
+            viu-benchmarks/.artifacts/*-jit.json
+            viu-benchmarks/.artifacts/subjects/editor/subject.json
+          retention-days: 90
 
   browser:
-    name: real-browser benchmarks (instrumentation deferred, #88)
-    # WIRED-BUT-SKIPPED. [V01.01.11.03]/#87 supplies packaged publication, serving, headless
-    # Chromium/Firefox/WebKit execution, and diagnostics from the Viu repository. #88 still must adapt
-    # the benchmark app and define reviewed collection/reporting for scenario time, command-buffer
-    # crossings, and payload size. No measurement is faked; enable only after that instrumentation
-    # lands.
-    # TODO([V01.01.11.04], #88): connect the benchmark scenarios to the real-browser harness and emit
-    # the timing, crossing-count, and per-assembly payload result models.
-    if: ${{ vars.ENABLE_BROWSER_BENCHMARKS == 'true' }}
+    name: trimmed WASM scenarios (Chromium Linux x64)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout benchmarks
-        # actions/checkout v4
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          path: viu-benchmarks
-          persist-credentials: false
-
-      - name: Checkout Viu
-        # actions/checkout v4
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: { path: viu-benchmarks, persist-credentials: false }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: assimalign/viu
+          ref: ${{ inputs.viu-ref || github.head_ref || 'main' }}
           path: viu
           persist-credentials: false
-
-      - name: Set up .NET
-        uses: ./viu-benchmarks/.github/actions/setup-dotnet
-
-      - name: Pack Viu
+      - uses: ./viu-benchmarks/.github/actions/setup-dotnet
+        with: { install-wasm-tools: 'true' }
+      - uses: ./viu-benchmarks/.github/actions/pack-viu
         id: viu
-        uses: ./viu-benchmarks/.github/actions/pack-viu
-
-      - name: Browser benchmarks placeholder
+        with: { full: 'true' }
+      - name: Publish and measure real WASM
+        shell: pwsh
         working-directory: viu-benchmarks
-        run: >-
-          dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks/Assimalign.Viu.Testing.Benchmarks.csproj
-          --configuration Release
-          -p:ViuVersion=${{ steps.viu.outputs.viu-version }}
-          -- browser
+        run: ./scripts/Invoke-BrowserBenchmarks.ps1 -ViuVersion '${{ steps.viu.outputs.viu-version }}' -Output .artifacts/browser
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with: { name: browser-results-chromium-linux-x64, path: 'viu-benchmarks/.artifacts/browser/**', retention-days: 90 }

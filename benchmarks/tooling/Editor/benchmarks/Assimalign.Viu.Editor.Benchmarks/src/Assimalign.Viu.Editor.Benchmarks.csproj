@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework><ViuAreaBenchmark>true</ViuAreaBenchmark><ViuEditorBenchmark>true</ViuEditorBenchmark></PropertyGroup></Project>

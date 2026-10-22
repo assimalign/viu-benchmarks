@@ -3,7 +3,7 @@
     Tests for the benchmark suite's harness plumbing ([V01.01.11.04], #88): scenario discovery, the
     deterministic interop-count counters, baseline load/compare, and the demonstration that a deliberate
     keyless bypass trips the interop-count gate. It references the benchmark app by name (the build
-    system indexes benchmarks/ and scripts/tests/) and copies the reviewed baseline beside its binary
+    system indexes harness/, benchmarks/ and scripts/tests/) and copies the reviewed baseline beside its binary
     so the gate test loads the real checked-in numbers.
   -->
   <PropertyGroup>
@@ -31,6 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\baselines\InteropCounts.json" Link="baselines\InteropCounts.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\baselines\InteropCounts.json" Link="baselines\InteropCounts.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

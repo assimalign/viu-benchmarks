@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$(TargetFrameworkForLibraries)</TargetFramework><ViuAreaBenchmark>true</ViuAreaBenchmark></PropertyGroup><ItemGroup><ViuBenchmarkPackageReference Include="Assimalign.Viu.Core" /></ItemGroup><ItemGroup><ViuBenchmarkProjectReference Include="Assimalign.Viu.Testing.Benchmarks" /></ItemGroup></Project>
