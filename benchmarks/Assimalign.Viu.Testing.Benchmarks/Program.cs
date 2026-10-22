@@ -16,7 +16,7 @@ namespace Assimalign.Viu.Testing.Benchmarks;
 /// <item><c>benchmarks [BenchmarkDotNet args]</c> — the wall-clock micro/meso timings (Release only).</item>
 /// <item><c>interop [--variant …] [--baseline …] [--results …] [--gate]</c> — the deterministic
 /// interop-crossing count harness and its regression gate (fast, runs in Debug).</item>
-/// <item><c>browser</c> — reports the benchmark instrumentation deferred under #88.</item>
+/// <item><c>browser</c> — directs callers to the published-WASM measurement script (exit 2).</item>
 /// </list>
 /// </summary>
 public static class Program
@@ -34,8 +34,8 @@ public static class Program
             case "interop":
                 return RunInterop(args[1..]);
             case "browser":
-                DeferredBrowserBenchmarks.PrintDeferralNotice(Console.Out);
-                return 0;
+                Console.Error.WriteLine("Run pwsh scripts/Invoke-BrowserBenchmarks.ps1 for published WASM measurements.");
+                return 2;
             case "help":
             case "--help":
             case "-h":

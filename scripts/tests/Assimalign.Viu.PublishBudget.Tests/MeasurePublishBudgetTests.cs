@@ -25,6 +25,24 @@ public sealed class MeasurePublishBudgetTests : IDisposable
     private readonly List<string> temporaryDirectories = new();
 
     [Fact]
+    public void PayloadOnly_WebCilAndDlls_ReportAssemblySizesWithoutCountingNativeRuntimeOrCompressedDuplicates()
+    {
+        byte[] webCil = Encoding.ASCII.GetBytes("\0asm\u0001\0\0\0webcil-memory-fixture");
+        var payload = CreatePayload(("Example.abcdefghij.wasm", webCil), ("Example.abcdefghij.wasm.br", CompressibleBytes(999)), ("Library.dll", CompressibleBytes(128)), ("dotnet.native.wasm", Encoding.ASCII.GetBytes("\0asm-native-runtime")));
+        var resultsPath = ReserveResultsPath();
+        var run = RunGate(CreateManifest(1000000), "-PublishDirectory", payload, "-MeasureOnlyPayload", "-ResultsPath", resultsPath);
+        run.ExitCode.ShouldBe(0, run.Output);
+        using var document = JsonDocument.Parse(File.ReadAllText(resultsPath));
+        var assemblies = document.RootElement.GetProperty("Assemblies");
+        assemblies.GetArrayLength().ShouldBe(2);
+        assemblies[0].GetProperty("assembly").GetString().ShouldBe("Example");
+        assemblies[0].GetProperty("rawBytes").GetInt64().ShouldBe(webCil.Length);
+        assemblies[0].GetProperty("compressedBytes").GetInt64().ShouldBeGreaterThan(0);
+        assemblies[1].GetProperty("assembly").GetString().ShouldBe("Library");
+        run.Output.ShouldNotContain("within budget");
+    }
+
+    [Fact]
     public void Gate_PayloadWithinBudget_ReportsPassAndExitsZero()
     {
         var payload = CreatePayload(("app.wasm", CompressibleBytes(4096)));

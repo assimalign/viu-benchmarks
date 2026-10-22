@@ -1,0 +1,33 @@
+<template>
+<button id="reset" @click="Reset">Reset</button>
+<button id="create" @click="Create">Create</button>
+<button id="create10000" @click="CreateMany">Create 10000</button>
+<button id="replace" @click="Replace">Replace</button>
+<button id="update" @click="Update">Update every tenth</button>
+<button id="select" @click="Select">Select</button>
+<button id="swap" @click="Swap">Swap</button>
+<button id="remove" @click="Remove">Remove</button>
+<button id="clear" @click="Clear">Clear</button>
+<output id="version">{{ Version }}</output>
+<table><tbody><tr v-for="row in Rows" :key="row.Identifier" :class="row.Identifier == Selected ? &quot;selected&quot; : &quot;&quot;"><td>{{ row.Identifier }}</td><td>{{ row.Label }}</td></tr></tbody></table>
+</template>
+@script {
+using System;
+using System.Linq;
+using Assimalign.Viu.Reactivity;
+public Reference<Row[]> Rows { get; } = Reactive.Reference(Array.Empty<Row>());
+public Reference<int> Version { get; } = Reactive.Reference(0);
+public Reference<int> Selected { get; } = Reactive.Reference(-1);
+private int nextIdentifier;
+private Row[] BuildRows(int count = 1000) => Enumerable.Range(0, count).Select(_ => new Row(nextIdentifier++, "row")).ToArray();
+private void Commit(Row[] rows) { Rows.Value = rows; Version.Value++; }
+private void Reset() { Selected.Value = -1; Commit(BuildRows()); }
+private void Create() => Commit(BuildRows());
+private void CreateMany() => Commit(BuildRows(10000));
+private void Replace() => Commit(BuildRows());
+private void Update() { Row[] rows = (Row[])Rows.Value.Clone(); for (int index = 0; index < rows.Length; index += 10) rows[index] = rows[index] with { Label = "updated" }; Commit(rows); }
+private void Select() { Selected.Value = Rows.Value[500].Identifier; Version.Value++; }
+private void Swap() { Row[] rows = (Row[])Rows.Value.Clone(); (rows[1], rows[998]) = (rows[998], rows[1]); Commit(rows); }
+private void Remove() => Commit(Rows.Value[1..]);
+private void Clear() => Commit(Array.Empty<Row>());
+}

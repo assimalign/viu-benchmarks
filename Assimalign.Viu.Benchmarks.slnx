@@ -33,4 +33,34 @@
     <File Path="scripts/Test-StartupBudget.ps1" />
     <File Path="scripts/budgets/PublishBudgets.json" />
   </Folder>
+  <Folder Name="/harness/Assimalign.Viu.Benchmarks.Harness/src/">
+    <Project Path="harness/Assimalign.Viu.Benchmarks.Harness/src/Assimalign.Viu.Benchmarks.Harness.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/Runtime/benchmarks/Assimalign.Viu.Runtime.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/Runtime/benchmarks/Assimalign.Viu.Runtime.Benchmarks/src/Assimalign.Viu.Runtime.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/Router/benchmarks/Assimalign.Viu.Router.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/Router/benchmarks/Assimalign.Viu.Router.Benchmarks/src/Assimalign.Viu.Router.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/ServerRenderer/benchmarks/Assimalign.Viu.ServerRenderer.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/ServerRenderer/benchmarks/Assimalign.Viu.ServerRenderer.Benchmarks/src/Assimalign.Viu.ServerRenderer.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/Utilities/benchmarks/Assimalign.Viu.Utilities.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/Utilities/benchmarks/Assimalign.Viu.Utilities.Benchmarks/src/Assimalign.Viu.Utilities.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/DevTools/benchmarks/Assimalign.Viu.DevTools.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/DevTools/benchmarks/Assimalign.Viu.DevTools.Benchmarks/src/Assimalign.Viu.DevTools.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/Browser/benchmarks/Assimalign.Viu.Browser.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/Browser/benchmarks/Assimalign.Viu.Browser.Benchmarks/src/Assimalign.Viu.Browser.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/libraries/Syntax/benchmarks/Assimalign.Viu.Syntax.Benchmarks/src/">
+    <Project Path="benchmarks/libraries/Syntax/benchmarks/Assimalign.Viu.Syntax.Benchmarks/src/Assimalign.Viu.Syntax.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/tooling/Compiler/benchmarks/Assimalign.Viu.Compiler.Benchmarks/src/">
+    <Project Path="benchmarks/tooling/Compiler/benchmarks/Assimalign.Viu.Compiler.Benchmarks/src/Assimalign.Viu.Compiler.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/benchmarks/tooling/Editor/benchmarks/Assimalign.Viu.Editor.Benchmarks/src/">
+    <Project Path="benchmarks/tooling/Editor/benchmarks/Assimalign.Viu.Editor.Benchmarks/src/Assimalign.Viu.Editor.Benchmarks.csproj" />
+  </Folder>
 </Solution>

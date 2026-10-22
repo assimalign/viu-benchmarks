@@ -405,3 +405,10 @@ _out/
 
 # Repo-local NuGet cache (see NuGet.config globalPackagesFolder).
 .nuget/packages/
+
+# Isolated benchmark subjects, reports, and package caches
+.artifacts/
+.nuget/
+
+# Framework assets staged by the packaged Browser SDK
+benchmarks/**/subjects/**/wwwroot/_content/

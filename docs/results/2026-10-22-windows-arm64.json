@@ -1,0 +1,805 @@
+{
+  "date": "2026-10-22",
+  "branch": "feature/V01.01.12.37-framework-and-performance",
+  "delivery": "local uncommitted work",
+  "host": {
+    "os": "Windows 11 10.0.26200.9711",
+    "processor": "Snapdragon X1E80100",
+    "architecture": "Arm64",
+    "sdk": "10.0.402",
+    "runtime": "10.0.13"
+  },
+  "allocations": [
+    {
+      "leg": "before",
+      "reportSha256": "3b95bd1a23f50b529074bb4e560cd5ecbf96daa9a3aca97c30614aa9d1a04847",
+      "cases": [
+        {
+          "method": "EmptyElement",
+          "bytesAllocated": 208
+        },
+        {
+          "method": "BoundElement",
+          "bytesAllocated": 384
+        },
+        {
+          "method": "RenderFrame",
+          "bytesAllocated": 296
+        },
+        {
+          "method": "EmptyInvocation",
+          "bytesAllocated": 184
+        }
+      ]
+    },
+    {
+      "leg": "after",
+      "reportSha256": "297940f03d23648c2969a47f57f6fe2efd6b90b3ec1406b2b840f51c843908ef",
+      "cases": [
+        {
+          "method": "EmptyElement",
+          "bytesAllocated": 208
+        },
+        {
+          "method": "BoundElement",
+          "bytesAllocated": 384
+        },
+        {
+          "method": "RenderFrame",
+          "bytesAllocated": 296
+        },
+        {
+          "method": "EmptyInvocation",
+          "bytesAllocated": 64
+        }
+      ]
+    }
+  ],
+  "browser": {
+    "baseline": {
+      "engine": "chromium",
+      "browser": "147.0.7727.15",
+      "runtime": "browser-wasm",
+      "warmups": 3,
+      "samples": 5,
+      "measurements": [
+        {
+          "scenario": "create",
+          "medianMilliseconds": 74.29999995231628,
+          "samplesMilliseconds": [
+            80.79999995231628,
+            74.29999995231628,
+            75,
+            72.20000004768372,
+            73.5
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "create10000",
+          "medianMilliseconds": 564.6000000238419,
+          "samplesMilliseconds": [
+            587.7000000476837,
+            563.4000000953674,
+            563.7000000476837,
+            584.8999999761581,
+            564.6000000238419
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "replace",
+          "medianMilliseconds": 70.70000004768372,
+          "samplesMilliseconds": [
+            65.90000009536743,
+            77.30000007152557,
+            70.70000004768372,
+            72.70000004768372,
+            65.29999995231628
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "update",
+          "medianMilliseconds": 71.39999997615814,
+          "samplesMilliseconds": [
+            69.60000002384186,
+            78.89999997615814,
+            80.90000009536743,
+            71.39999997615814,
+            68.10000002384186
+          ],
+          "commandFrames": [
+            101,
+            101,
+            101,
+            101,
+            101
+          ]
+        },
+        {
+          "scenario": "select",
+          "medianMilliseconds": 52.799999952316284,
+          "samplesMilliseconds": [
+            51.39999997615814,
+            53.60000002384186,
+            55,
+            52.799999952316284,
+            51.699999928474426
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "swap",
+          "medianMilliseconds": 57.39999997615814,
+          "samplesMilliseconds": [
+            62.60000002384186,
+            56.799999952316284,
+            60.60000002384186,
+            57.39999997615814,
+            54.700000047683716
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "remove",
+          "medianMilliseconds": 58.40000009536743,
+          "samplesMilliseconds": [
+            65.20000004768372,
+            50.39999997615814,
+            53.299999952316284,
+            58.40000009536743,
+            60.299999952316284
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "clear",
+          "medianMilliseconds": 16.600000023841858,
+          "samplesMilliseconds": [
+            16.5,
+            16.600000023841858,
+            16.299999952316284,
+            18.100000023841858,
+            19.300000071525574
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    "current": {
+      "engine": "chromium",
+      "browser": "147.0.7727.15",
+      "runtime": "browser-wasm",
+      "warmups": 3,
+      "samples": 20,
+      "measurements": [
+        {
+          "scenario": "create",
+          "medianMilliseconds": 48.80000001192093,
+          "samplesMilliseconds": [
+            64.69999992847443,
+            59.60000002384186,
+            73,
+            54.700000047683716,
+            51.10000002384186,
+            55.300000071525574,
+            48.89999997615814,
+            47.10000002384186,
+            50.800000071525574,
+            48.700000047683716,
+            49.60000002384186,
+            47.700000047683716,
+            45.799999952316284,
+            44.59999990463257,
+            44.39999997615814,
+            44.799999952316284,
+            49.300000071525574,
+            46,
+            46.699999928474426,
+            45.199999928474426
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "create10000",
+          "medianMilliseconds": 448.4000000357628,
+          "samplesMilliseconds": [
+            490,
+            428.3000000715256,
+            432.6999999284744,
+            446.89999997615814,
+            453.8000000715256,
+            449.2999999523163,
+            445,
+            435.59999990463257,
+            434,
+            448.60000002384186,
+            448.2000000476837,
+            451.39999997615814,
+            450.6999999284744,
+            434.2999999523163,
+            451.10000002384186,
+            461.39999997615814,
+            447.5,
+            455.1999999284744,
+            451.7999999523163,
+            428.8000000715256
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "replace",
+          "medianMilliseconds": 59.35000002384186,
+          "samplesMilliseconds": [
+            55.700000047683716,
+            60.60000002384186,
+            59.5,
+            64.20000004768372,
+            59.200000047683716,
+            56.89999997615814,
+            59.800000071525574,
+            60.39999997615814,
+            62.200000047683716,
+            55.699999928474426,
+            60.40000009536743,
+            59.10000002384186,
+            57.299999952316284,
+            60.5,
+            61.200000047683716,
+            58.699999928474426,
+            62.700000047683716,
+            57.700000047683716,
+            53.300000071525574,
+            55
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "update",
+          "medianMilliseconds": 37.09999996423721,
+          "samplesMilliseconds": [
+            40.60000002384186,
+            45.799999952316284,
+            44.800000071525574,
+            44,
+            37.60000002384186,
+            36.199999928474426,
+            39.200000047683716,
+            36.89999997615814,
+            33.799999952316284,
+            40.200000047683716,
+            37.299999952316284,
+            34.5,
+            36.299999952316284,
+            37.90000009536743,
+            36.89999997615814,
+            36.799999952316284,
+            33.700000047683716,
+            39.40000009536743,
+            35.5,
+            34
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "select",
+          "medianMilliseconds": 36.75,
+          "samplesMilliseconds": [
+            35.60000002384186,
+            34.799999952316284,
+            36.5,
+            37,
+            32.199999928474426,
+            37.299999952316284,
+            38.699999928474426,
+            38.90000009536743,
+            37.700000047683716,
+            35.5,
+            37.10000002384186,
+            36.700000047683716,
+            36.10000002384186,
+            36.700000047683716,
+            37.39999997615814,
+            37,
+            36.799999952316284,
+            33.40000009536743,
+            36.700000047683716,
+            38.10000002384186
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "swap",
+          "medianMilliseconds": 38,
+          "samplesMilliseconds": [
+            45.89999997615814,
+            46.89999997615814,
+            46.199999928474426,
+            37.10000002384186,
+            38.39999997615814,
+            36.5,
+            34.60000002384186,
+            36.699999928474426,
+            37.89999997615814,
+            36.90000009536743,
+            33.90000009536743,
+            39.799999952316284,
+            38.10000002384186,
+            35.5,
+            35.200000047683716,
+            38.200000047683716,
+            38.699999928474426,
+            39,
+            36.90000009536743,
+            40.89999997615814
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "remove",
+          "medianMilliseconds": 37.699999928474426,
+          "samplesMilliseconds": [
+            37.10000002384186,
+            37.59999990463257,
+            39,
+            35,
+            39.800000071525574,
+            36.60000002384186,
+            37,
+            38.5,
+            40.5,
+            38.5,
+            36.299999952316284,
+            36.300000071525574,
+            39,
+            37.799999952316284,
+            35.10000002384186,
+            35.700000047683716,
+            38.60000002384186,
+            39.199999928474426,
+            38.199999928474426,
+            32.60000002384186
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "scenario": "clear",
+          "medianMilliseconds": 14.449999988079071,
+          "samplesMilliseconds": [
+            11.5,
+            11.299999952316284,
+            10.699999928474426,
+            10.800000071525574,
+            14.5,
+            13.100000023841858,
+            16.100000023841858,
+            14.599999904632568,
+            15.200000047683716,
+            14.700000047683716,
+            17.299999952316284,
+            14.799999952316284,
+            14.900000095367432,
+            16.09999990463257,
+            14.300000071525574,
+            14.399999976158142,
+            14.399999976158142,
+            18.200000047683716,
+            14.299999952316284,
+            12.100000023841858
+          ],
+          "commandFrames": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2
+          ]
+        }
+      ]
+    },
+    "currentProvenance": {
+      "packages": [
+        {
+          "sha256": "913D951AA64323535163B455C0B5850D89BE44695D74C2DC1404A55E589DC0A0",
+          "name": "Assimalign.Viu.App.Browser.Ref.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "D37DCDDA11ED71044DA21499808234998B2C9662B91CBF8A477A45FDCB3DC6A0",
+          "name": "Assimalign.Viu.App.Browser.Runtime.browser-wasm.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "9BF6D6F44E4B7DCC6EBEE05E948A016299A711EE69275B024386CE61B1F36262",
+          "name": "Assimalign.Viu.App.Ref.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "AF77AF9EF7EBF2CADF1DDBC20BB31E5369BB9A509E915B210B7DF068EA793CB5",
+          "name": "Assimalign.Viu.Browser.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "CFC509110748202B60DD76D5F5064EA2F35407A1CB313E12BF9CECE738E7C73B",
+          "name": "Assimalign.Viu.Browser.Router.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "3FA88D8E25141A5CE354EB98D8AEF70F6C1D2BDD31FA17031FAE3DB902835323",
+          "name": "Assimalign.Viu.Components.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "5989D46FBFE76CA0AA2944C4DFDEBF10DE3123D73289FC6AC0548D3A4FE64BF4",
+          "name": "Assimalign.Viu.Core.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "8698EB027E5088D54BE3F4A1BA67CB76147F81639CCFACC1269128C298E30888",
+          "name": "Assimalign.Viu.DevTools.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "0548F43BCDF734D6871136D2B2FF375F7B4415E0FF8AF7197737DEE7FEE54142",
+          "name": "Assimalign.Viu.FileRouting.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "85DF304F3D0103F01B901946EC1D8A7E587AB23B202C29B8A922037D8E3127C7",
+          "name": "Assimalign.Viu.Reactivity.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "8A43C6CE5851F50C3D83900CD1D97D272D4727CF689B243DA51C9599076F692B",
+          "name": "Assimalign.Viu.Router.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "C6BCD54476157F3A25E0FB15C037A845D991F511505DEBA7216ABC4311DA1B09",
+          "name": "Assimalign.Viu.Sdk.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "1502ED1D7106B9286512391F7F8793CEC62709E67E95BB5E3A11AD59D559C971",
+          "name": "Assimalign.Viu.Sdk.Browser.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "984EAC966EB1847D11A03290705B2C506BF4F5B6ACD28FF92493605E6FD1379A",
+          "name": "Assimalign.Viu.ServerRenderer.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "DC39F2CDE0C84A78D4AAFA2DB894196ED9106A4204B4CA7B77E27E7CCEC702A7",
+          "name": "Assimalign.Viu.State.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "73E7045FC986F3B8FB7FF108CD323AA73659EBEDB08E957317F44C22067F20AB",
+          "name": "Assimalign.Viu.Templates.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "AA4EF2555A6206E8EA9A4C055E4CFD0B3882DF4E867717806440BD56607349A2",
+          "name": "Assimalign.Viu.Testing.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "ED8AD310986C0B84414E3738362EEFAE3B2ED8C5F4D1F64574724A4DE83322E4",
+          "name": "Assimalign.Viu.UtilityCss.10.0.0-preview.1.nupkg"
+        },
+        {
+          "sha256": "019FDCF6ADC67530576D606E8533E8C388F46018DED16AB7BC7A1DB8497E9245",
+          "name": "Assimalign.Viu.UtilityCss.Build.10.0.0-preview.1.nupkg"
+        }
+      ],
+      "architecture": "Arm64",
+      "engine": "chromium",
+      "os": "Microsoft Windows 10.0.26200",
+      "viuCommit": "65b36a3d7fe1b2d3b24f66bf068ddac532571c71",
+      "runtime": "browser-wasm",
+      "viuVersion": "10.0.0-preview.1",
+      "viuDirty": true,
+      "utc": "2026-10-22T13:44:09.5192339Z",
+      "sdk": "10.0.402"
+    },
+    "currentPayload": {
+      "CompressedPublishSizeBytes": 2341520,
+      "RawPublishSizeBytes": 8087771,
+      "FileCount": 27,
+      "Assemblies": [
+        {
+          "assembly": "Assimalign.Viu.Browser",
+          "file": "_framework/Assimalign.Viu.Browser.krpgno08ue.wasm",
+          "rawBytes": 137493,
+          "compressedBytes": 46632
+        },
+        {
+          "assembly": "Assimalign.Viu.Browser.Subject",
+          "file": "_framework/Assimalign.Viu.Browser.Subject.x0fhcrqc2l.wasm",
+          "rawBytes": 28437,
+          "compressedBytes": 9096
+        },
+        {
+          "assembly": "Assimalign.Viu.Components",
+          "file": "_framework/Assimalign.Viu.Components.ow3kf0lo3i.wasm",
+          "rawBytes": 37141,
+          "compressedBytes": 14953
+        },
+        {
+          "assembly": "Assimalign.Viu.Core",
+          "file": "_framework/Assimalign.Viu.Core.cqmfwgomxd.wasm",
+          "rawBytes": 173333,
+          "compressedBytes": 64061
+        },
+        {
+          "assembly": "Assimalign.Viu.Reactivity",
+          "file": "_framework/Assimalign.Viu.Reactivity.92i2cbvfav.wasm",
+          "rawBytes": 14613,
+          "compressedBytes": 5977
+        },
+        {
+          "assembly": "Assimalign.Viu.State",
+          "file": "_framework/Assimalign.Viu.State.pjgs3vjx8j.wasm",
+          "rawBytes": 9493,
+          "compressedBytes": 3894
+        },
+        {
+          "assembly": "System.Collections",
+          "file": "_framework/System.Collections.4tfbk5d0gm.wasm",
+          "rawBytes": 21781,
+          "compressedBytes": 8805
+        },
+        {
+          "assembly": "System.ComponentModel",
+          "file": "_framework/System.ComponentModel.g1c3ajasqr.wasm",
+          "rawBytes": 4885,
+          "compressedBytes": 1678
+        },
+        {
+          "assembly": "System.IO.Pipelines",
+          "file": "_framework/System.IO.Pipelines.tm1x86lyud.wasm",
+          "rawBytes": 8469,
+          "compressedBytes": 3144
+        },
+        {
+          "assembly": "System.Linq",
+          "file": "_framework/System.Linq.jcftes7i5j.wasm",
+          "rawBytes": 16149,
+          "compressedBytes": 6851
+        },
+        {
+          "assembly": "System.Memory",
+          "file": "_framework/System.Memory.hec84mwy76.wasm",
+          "rawBytes": 15125,
+          "compressedBytes": 6430
+        },
+        {
+          "assembly": "System.Private.CoreLib",
+          "file": "_framework/System.Private.CoreLib.s7uylvwdj5.wasm",
+          "rawBytes": 1322773,
+          "compressedBytes": 416483
+        },
+        {
+          "assembly": "System.Runtime.InteropServices.JavaScript",
+          "file": "_framework/System.Runtime.InteropServices.JavaScript.tfqjqhqmic.wasm",
+          "rawBytes": 48405,
+          "compressedBytes": 18425
+        },
+        {
+          "assembly": "System.Security.Cryptography",
+          "file": "_framework/System.Security.Cryptography.hvd1jnp8ml.wasm",
+          "rawBytes": 6933,
+          "compressedBytes": 2803
+        },
+        {
+          "assembly": "System.Text.Encodings.Web",
+          "file": "_framework/System.Text.Encodings.Web.tl6qemqg8i.wasm",
+          "rawBytes": 29461,
+          "compressedBytes": 9507
+        },
+        {
+          "assembly": "System.Text.Json",
+          "file": "_framework/System.Text.Json.5vwdx9lu2i.wasm",
+          "rawBytes": 87829,
+          "compressedBytes": 30651
+        },
+        {
+          "assembly": "System.Text.RegularExpressions",
+          "file": "_framework/System.Text.RegularExpressions.oe0c098bnb.wasm",
+          "rawBytes": 102165,
+          "compressedBytes": 36076
+        }
+      ]
+    },
+    "baselineProvenance": "Initial investigative run predates run.json support. Retained local published output exists, but there is no complete baseline source manifest. Use command-frame counts as mechanistic evidence; no causal timing claim."
+  }
+}

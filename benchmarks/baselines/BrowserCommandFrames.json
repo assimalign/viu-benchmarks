@@ -1,0 +1,6 @@
+{
+  "note": "Initial proposed ceilings for review: 2026-10-22 Windows ARM64 Chromium, trimmed browser-wasm; all five samples used two frames per action. These are actual applyCommandBuffer calls, not DOM operations. Never rewrite from measured output.",
+  "engine": "chromium",
+  "runtime": "browser-wasm",
+  "ceilings": { "create": 2, "create10000": 2, "replace": 2, "update": 2, "select": 2, "swap": 2, "remove": 2, "clear": 2 }
+}

@@ -31,6 +31,10 @@
   -->
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;$(ViuBenchmarksRepositoryDirectory).artifacts/**</DefaultItemExcludes>
+    <!-- Generated child publish paths exceed Windows MAX_PATH beneath the full area layout.
+         Keep ordinary binaries short; explicit ArtifactsPath/OutDir still belong to the caller. -->
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == '' and '$(ArtifactsPath)' == ''">$(ViuBenchmarksRepositoryDirectory).artifacts/bin/$(MSBuildProjectName.Replace('Assimalign.Viu.', ''))/</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup Condition="Exists('$(ViuBenchmarksRepositoryDirectory).editorconfig')">

@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup Condition="'$(ViuAreaBenchmark)' == 'true'">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(ViuAreaBenchmark)' == 'true'">
+    <ViuBenchmarkPackageReference Include="BenchmarkDotNet" />
+    <ViuBenchmarkProjectReference Include="Assimalign.Viu.Benchmarks.Harness" />
+    <AssemblyMetadata Include="ViuVersion" Value="$(ViuVersion)" />
+    <AssemblyMetadata Include="BenchmarksRoot" Value="$(ViuBenchmarksRepositoryDirectory)" />
+  </ItemGroup>
+  <!-- Compiler subjects come from the shipped targeting pack's analyzer closure, never sibling outputs. -->
+  <ItemGroup Condition="'$(ViuCompilerBenchmark)' == 'true'">
+    <ViuBenchmarkPackageReference Include="Assimalign.Viu.App.Ref" GeneratePathProperty="true" ExcludeAssets="all" />
+    <ViuBenchmarkPackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <Reference Include="$(PkgAssimalign_Viu_App_Ref)\analyzers\dotnet\cs\Assimalign.Viu.Syntax*.dll" />
+    <Reference Include="$(PkgAssimalign_Viu_App_Ref)\analyzers\dotnet\cs\Assimalign.Viu.Compiler*.dll" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ViuEditorSubjectDirectory Condition="'$(ViuEditorSubjectDirectory)' == ''">$(ViuBenchmarksRepositoryDirectory).artifacts\subjects\editor\</ViuEditorSubjectDirectory>
+  </PropertyGroup>
+</Project>

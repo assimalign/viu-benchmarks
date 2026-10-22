@@ -1,92 +1,65 @@
-# viu-benchmarks
+# Viu benchmarks
 
-Performance measurement for [Viu](https://github.com/assimalign/viu): the benchmark suite, the
-deterministic interop-count regression gate, and the reviewed browser publish/startup budgets.
+Packaged-consumer performance coverage for Viu, organized by area using the Cohesion benchmark
+layout, shared profiles, comparison tooling, and separate time/allocation history series.
+Viu source stays in the sibling repository. Every measured framework reference comes from packages.
 
-**All Viu benchmarking belongs here.** The Viu repository holds no benchmark projects; a benchmark
-added there is a mistake, not a shortcut. See `.claude/rules/benchmarks.md` in `assimalign/viu`.
+```powershell
+pwsh ../viu/scripts/Install-Local.ps1
+dotnet build Assimalign.Viu.Benchmarks.slnx -c Release
+pwsh scripts/Invoke-Benchmarks.ps1 -List
+pwsh scripts/Invoke-Benchmarks.ps1 -ExcludeArea Editor -Profile dry
+pwsh scripts/Invoke-Benchmarks.ps1 -Area Runtime -Profile ci -Output .artifacts/runtime-run
+pwsh scripts/Invoke-BrowserBenchmarks.ps1 -Output .artifacts/browser-run
+```
 
-## What is in here
+See [the measured results](docs/PERFORMANCE-RESULTS-2026-10-22.md) and [CONVENTIONS.md](CONVENTIONS.md) for profiles, provenance, NativeAOT, editor preparation,
+coverage boundaries, comparisons, and history. [The measurement viewer](site/index.html) opens
+downloaded time/allocation history JSON files locally; no external scripts or account are required.
 
-| Path | What it is |
+## Coverage
+
+| Area | Subjects |
 | --- | --- |
-| `benchmarks/Assimalign.Viu.Testing.Benchmarks` | Console app with three verbs: `benchmarks` (BenchmarkDotNet wall-clock), `interop` (the deterministic node-op counter), `browser` (deferred, [#88]). |
-| `benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests` | Tests for the harness plumbing: scenario discovery, counters, baseline load/compare, and that a keyless bypass trips the gate. |
-| `benchmarks/baselines/InteropCounts.json` | The reviewed interop-crossing ceilings. Raised only by an explicit edit — never ratcheted by CI. |
-| `scripts/Measure-PublishBudget.ps1` | Publish-size and trim-warning gate over the brotli-compressed payload. |
-| `scripts/Test-StartupBudget.ps1` | Boot-to-interactive startup gate over the median of the measured Chromium runs. |
-| `scripts/budgets/PublishBudgets.json` | The reviewed size and startup budgets, with measured provenance. |
-| `scripts/tests/Assimalign.Viu.PublishBudget.Tests` | Hermetic tests driving both checkers over on-disk fixtures. |
+| Runtime | Reactive subscribers, computed caching, batching, component descriptions, render frames, store lookup/lifetime, all deterministic renderer scenarios |
+| Browser | Component registration microbenchmarks; separate trimmed WASM app with eight row operations, live command-frame counts, and managed assembly payload sizes |
+| Router | Static/dynamic/missing matching across route-table sizes |
+| ServerRenderer | Virtual-tree output and compiled fixture render paths |
+| Syntax | CSS parsing/writing/scoping; canonical and compatible containers; template parsing |
+| Utilities | Candidate parsing, full utility compilation, and folder-route table creation |
+| DevTools | Empty, single-message, and 100-message protocol encoding/decoding |
+| Compiler | Projection and source emission across template sizes, including scoped styles |
+| Editor | Actual packaged language-server completion, semantic tokens, folding, symbols, and edit/complete requests across document sizes |
 
-## The two measurement kinds, and why they are wired differently
+## Gates and reviewed budgets
 
-**Wall-clock timings never gate.** They are environment-relative, so the `timings` lane is opt-in
-(`workflow_dispatch`, or the `benchmark-run` label) and publishes artifacts.
+The existing deterministic DOM-operation proxy gate remains unchanged:
 
-**Interop counts do gate.** Counting node operations through the in-memory adapter is a DOM-free
-proxy for JSImport crossings — exact and machine-independent — so a regression against the reviewed
-baseline is a real failure.
-
-**Budgets gate on reviewed ceilings, not on deltas.** CI never rewrites
-`scripts/budgets/PublishBudgets.json`; growth is always a deliberate, reviewed edit.
-
-## Repository layout: this repo measures, Viu is measured
-
-This repository contains no framework source. It consumes Viu as **packages**, and the measurement
-subject for the budget gates — the packaged-consumer fixture and the Playwright harness that
-publishes and drives it — stays in the Viu repository:
-
-- `assimalign/viu` owns `scripts/Test-EndToEnd.ps1`, `scripts/fixtures/EndToEndBrowserApp`, and
-  `benchmarks/Assimalign.Viu.Testing.EndToEnd`.
-- This repository owns the budgets and the checkers that enforce them.
-
-Both budget checkers were built for that split: `-ManifestPath` defaults to the manifest beside the
-script (ours), while a sample's `project` and `publishScript` resolve against `-RepositoryRoot`
-(Viu's). That is why the gates run as `-RepositoryRoot ../viu`.
-
-## Local setup
-
-Check `assimalign/viu` out as a **sibling directory**, then populate its package feed:
-
-```bash
-pwsh ../viu/scripts/Install-Local.ps1 -SkipSdk -SkipFramework
+```powershell
+dotnet test benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests -c Release
+dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks -c Release -- interop --gate
+dotnet test scripts/tests/Assimalign.Viu.PublishBudget.Tests -c Release
 ```
 
-`nuget.config` resolves `viu-local` as `..\viu\_out\packages` relative to the configuration file, so
-the sibling layout is required — CI reproduces it by checking both repositories out side by side.
-`-SkipSdk -SkipFramework` packs only the libraries the benchmarks need and avoids the WebAssembly
-workload; drop both switches when you also want to run the budget lanes locally.
+`benchmarks/baselines/InteropCounts.json` and `scripts/budgets/PublishBudgets.json` retain their
+existing ceilings. `BrowserCommandFrames.json` proposes the initial actual-frame ceilings from the
+2026-10-22 measurements for review. Scripts never rewrite a baseline from results. The WASM runner
+fails missing scenarios, incomplete measurements, and command-frame regressions.
 
-```bash
-dotnet build Assimalign.Viu.Benchmarks.slnx
-dotnet test benchmarks/Assimalign.Viu.Testing.Benchmarks.Tests/Assimalign.Viu.Testing.Benchmarks.Tests.csproj
+The existing application size/startup gates continue to consume Viu's packaged test fixture:
+
+```powershell
+pwsh scripts/Measure-PublishBudget.ps1 -RepositoryRoot ../viu -SampleName EndToEndBrowserApp
+pwsh ../viu/scripts/Test-EndToEnd.ps1 -MeasureStartup
+pwsh scripts/Test-StartupBudget.ps1 -ResultsPath ../viu/_out/test-results/end-to-end/startup.json
 ```
 
-Run the gate and the benchmarks:
+For a different already-published app, `Measure-PublishBudget.ps1 -MeasureOnlyPayload
+-PublishDirectory <directory> -ResultsPath <json>` reuses the same raw/brotli sizing implementation
+without applying an unrelated application's budget. DLLs and WebCIL wrappers receive individual
+assembly rows; native runtime WASM is excluded from the managed-assembly subtotal.
 
-```bash
-dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks --configuration Release -- interop --gate
-```
-
-```bash
-dotnet run --project benchmarks/Assimalign.Viu.Testing.Benchmarks --configuration Release -- benchmarks --smoke --filter '*'
-```
-
-Both checker scripts require PowerShell 7 (`#Requires -Version 7.0`); Windows PowerShell 5.1 cannot
-parse them.
-
-## Which Viu version is measured
-
-`build/Targets/Build.References.Packages.targets` pins `ViuVersion` for local work, but the pin is
-**overridable and CI overrides it**. Every CI lane packs the paired Viu checkout at HEAD and passes
-`-p:ViuVersion=<packed version>`, so the interop gate keeps measuring the current renderer rather
-than a frozen pin. To reproduce a CI run locally, pack Viu and pass the same switch:
-
-```bash
-dotnet build Assimalign.Viu.Benchmarks.slnx -p:ViuVersion=10.0.0-beta.11
-```
-
-Because Viu's renderer changes land in another repository, the `benchmarks` workflow also runs
-daily and `budget-gates` weekly — a path filter here cannot observe a change made there.
-
-[#88]: https://github.com/assimalign/viu/issues/88
+CI validates deterministic gates and area execution, records full measurements on scheduled/manual
+runs, and uploads separate Linux JIT, Windows editor, and Chromium WASM artifacts with provenance.
+Manual runs accept a Viu ref for coordinated branch validation. CI has not run merely because these
+workflow files exist; local verification records live in Viu's initiative document.

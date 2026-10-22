@@ -18,7 +18,8 @@
     -->
     <ItemGroup>
         <!-- Index code projects ONCE: the benchmark suite and the budget-checker tests. -->
-        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\**\*.csproj" />
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)benchmarks\**\*.csproj" Exclude="**\bin\**;**\obj\**" />
+        <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)harness\**\*.csproj" />
         <_ViuBenchmarkProject Include="$(ViuBenchmarksRepositoryDirectory)scripts\tests\**\*.csproj" />
         <_ViuBenchmarkProject Update="@(_ViuBenchmarkProject)" ProjectId="%(_ViuBenchmarkProject.Filename)" ProjectPath="%(_ViuBenchmarkProject.Identity)" />
 
