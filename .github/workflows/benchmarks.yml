@@ -13,6 +13,14 @@
 #     baseline (benchmarks/baselines/InteropCounts.json) and fails a regression. Counts are
 #     machine-independent, so this is a real gate, not a noisy timing.
 #   - areas, editor, browser: real measurements with separate host provenance and machine-readable history artifacts.
+#
+# Runners. The measuring lanes (areas, editor, browser) run on the assimalign self-hosted benchmark
+# machines for the weekly schedule and for pushes, on main only; pull requests, dispatches, release
+# branches, and the deterministic gates always run GitHub-hosted. Repository variables:
+#   BENCHMARK_RUNNER           self-hosted label for the Linux lanes (benchmark-linux-x64)
+#   BENCHMARK_RUNNER_WINDOWS   self-hosted label for the Windows lane (benchmark-windows-x64)
+# Unset, every lane runs hosted. The machines are on Mondays 00:00-08:00 UTC only, so a push to main
+# outside that window queues until Monday and fails if that is more than 24 hours away.
 name: benchmarks
 
 on:
@@ -28,9 +36,10 @@ on:
         options: [ci, dry]
         default: ci
   # Viu's renderer changes in a different repository, so a push filter here cannot see them. The
-  # daily run is what keeps the interop gate honest against Viu HEAD.
+  # weekly run is what keeps the interop gate honest against Viu HEAD. Mondays, inside the
+  # self-hosted machines' 02:00-08:00 UTC measuring window, after cohesion-benchmarks' 02:17 start.
   schedule:
-    - cron: '23 6 * * *'
+    - cron: '47 2 * * 1'
   push:
     branches: [main, 'release/**']
     paths:
@@ -172,7 +181,8 @@ jobs:
 
   areas:
     name: area suites (Linux x64 JIT)
-    runs-on: ubuntu-24.04
+    # Self-hosted only for the schedule and pushes on main; see "Runners" above.
+    runs-on: ${{ (github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'push') && vars.BENCHMARK_RUNNER) || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with: { path: viu-benchmarks, persist-credentials: false }
@@ -211,7 +221,8 @@ jobs:
   editor:
     name: packaged editor requests (Windows x64 JIT)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: windows-latest
+    # Self-hosted only for the schedule on main; see "Runners" above.
+    runs-on: ${{ (github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'push') && vars.BENCHMARK_RUNNER_WINDOWS) || 'windows-latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with: { path: viu-benchmarks, persist-credentials: false }
@@ -250,7 +261,8 @@ jobs:
   browser:
     name: trimmed WASM scenarios (Chromium Linux x64)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-24.04
+    # Self-hosted only for the schedule on main; see "Runners" above.
+    runs-on: ${{ (github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'push') && vars.BENCHMARK_RUNNER) || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with: { path: viu-benchmarks, persist-credentials: false }
